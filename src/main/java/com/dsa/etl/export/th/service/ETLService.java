@@ -88,6 +88,7 @@ public class ETLService {
 //                futures.add(processChunk(year, offset, limit, hs2Map, hs4Map, countryMap));
 //            }
 //            TODO แก้เรื่อง sql ของ fact เพื่อดึงชื่อ ประเทศ กับ hs2 hs4
+//            TODO ETL ALL Table 3M record
 //            TODO now แก้เรื่อง log loop
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             for (int i = 0; i < totalChunks; i++) {
