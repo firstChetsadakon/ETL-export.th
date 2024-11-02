@@ -19,7 +19,7 @@ public interface FactExportThRepository extends JpaRepository<FactExportThEntity
 
     Page<FactExportThEntity> findByYear(Integer year, Pageable pageable);
     Page<FactExportThEntity> findByYearAndMonth(Integer year, Integer month, Pageable pageable);
-    Page<FactExportThEntity> findByYearAndMonthAndCountry_Country(Integer year, Integer month, String country, Pageable pageable);
+//    Page<FactExportThEntity> findByYearAndMonthAndCountry_Country(Integer year, Integer month, String country, Pageable pageable);
     long countByYearAndMonth(Integer year, Integer month);
 
     @Query("SELECT SUM(f.thaipValue) FROM FactExportThEntity f WHERE f.year = :year")
@@ -34,24 +34,24 @@ public interface FactExportThRepository extends JpaRepository<FactExportThEntity
     @Query("SELECT SUM(f.dollarValue) FROM FactExportThEntity f WHERE f.year = :year AND f.month = :month")
     BigDecimal sumDollarValueByYearAndMonth(@Param("year") Integer year, @Param("month") Integer month);
 
-    @Query("SELECT new map(" +
-            "f.country.country as country, " +
-            "SUM(f.thaipValue) as totalThaipValue, " +
-            "SUM(f.dollarValue) as totalDollarValue, " +
-            "COUNT(f) as recordCount) " +
-            "FROM FactExportThEntity f " +
-            "WHERE f.year = :year " +
-            "GROUP BY f.country.country")
-    List<Map<String, Object>> findSummaryByCountry(@Param("year") Integer year);
-
-    @Query("SELECT new map(" +
-            "f.hs2.hs2dg as hs2Code, " +
-            "f.hs2.description as description, " +
-            "SUM(f.thaipValue) as totalThaipValue, " +
-            "SUM(f.dollarValue) as totalDollarValue, " +
-            "COUNT(f) as recordCount) " +
-            "FROM FactExportThEntity f " +
-            "WHERE f.year = :year " +
-            "GROUP BY f.hs2.hs2dg, f.hs2.description")
-    List<Map<String, Object>> findSummaryByHs2(@Param("year") Integer year);
+//    @Query("SELECT new map(" +
+//            "f.country.country as country, " +
+//            "SUM(f.thaipValue) as totalThaipValue, " +
+//            "SUM(f.dollarValue) as totalDollarValue, " +
+//            "COUNT(f) as recordCount) " +
+//            "FROM FactExportThEntity f " +
+//            "WHERE f.year = :year " +
+//            "GROUP BY f.country.country")
+//    List<Map<String, Object>> findSummaryByCountry(@Param("year") Integer year);
+//
+//    @Query("SELECT new map(" +
+//            "f.hs2.hs2dg as hs2Code, " +
+//            "f.hs2.description as description, " +
+//            "SUM(f.thaipValue) as totalThaipValue, " +
+//            "SUM(f.dollarValue) as totalDollarValue, " +
+//            "COUNT(f) as recordCount) " +
+//            "FROM FactExportThEntity f " +
+//            "WHERE f.year = :year " +
+//            "GROUP BY f.hs2.hs2dg, f.hs2.description")
+//    List<Map<String, Object>> findSummaryByHs2(@Param("year") Integer year);
 }

@@ -19,17 +19,14 @@ public class FactExportThEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "country_id")
-    private DimCountryEntity country;
+    @Column(name = "country_id")
+    private Long countryId;
 
-    @ManyToOne
-    @JoinColumn(name = "hs2_id")
-    private DimHs2Entity hs2;
+    @Column(name = "hs2_id")
+    private Long hs2Id;
 
-    @ManyToOne
-    @JoinColumn(name = "hs4_id")
-    private DimHs4Entity hs4;
+    @Column(name = "hs4_id")
+    private Long hs4Id;
 
     @Column(name = "thaip_value", precision = 20, scale = 2)
     private BigDecimal thaipValue;
