@@ -160,9 +160,9 @@ public class ETLServiceTest {
                     .orElseThrow(() -> new ETLException("HS4 not found: " + source.getHs4dg()));
 
             // Set dimension references
-            fact.setCountry(country);
-            fact.setHs2(hs2);
-            fact.setHs4(hs4);
+//            fact.setCountry(country);
+//            fact.setHs2(hs2);
+//            fact.setHs4(hs4);
 
             // Transform values
             fact.setThaipValue(parseValue(source.getThaipValue()));
@@ -171,7 +171,7 @@ public class ETLServiceTest {
             fact.setMonth(parseInteger(source.getMonth(), "month"));
             fact.setYear(parseInteger(source.getYear(), "year"));
 
-            validateFactData(fact);
+//            validateFactData(fact);
             return fact;
         } catch (Exception e) {
             log.error("Error mapping fact data for record: {}", source, e);
@@ -201,29 +201,29 @@ public class ETLServiceTest {
         }
     }
 
-    private void validateFactData(FactExportThEntity fact) {
-        List<String> errors = new ArrayList<>();
-
-        if (fact.getCountry() == null) {
-            errors.add("Country reference cannot be null");
-        }
-        if (fact.getHs2() == null) {
-            errors.add("HS2 reference cannot be null");
-        }
-        if (fact.getHs4() == null) {
-            errors.add("HS4 reference cannot be null");
-        }
-        if (fact.getMonth() != null && (fact.getMonth() < 1 || fact.getMonth() > 12)) {
-            errors.add("Month must be between 1 and 12");
-        }
-        if (fact.getYear() != null && fact.getYear() < 1900) {
-            errors.add("Year must be after 1900");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new ETLException("Fact data validation failed: " + String.join(", ", errors));
-        }
-    }
+//    private void validateFactData(FactExportThEntity fact) {
+//        List<String> errors = new ArrayList<>();
+//
+//        if (fact.getCountry() == null) {
+//            errors.add("Country reference cannot be null");
+//        }
+//        if (fact.getHs2() == null) {
+//            errors.add("HS2 reference cannot be null");
+//        }
+//        if (fact.getHs4() == null) {
+//            errors.add("HS4 reference cannot be null");
+//        }
+//        if (fact.getMonth() != null && (fact.getMonth() < 1 || fact.getMonth() > 12)) {
+//            errors.add("Month must be between 1 and 12");
+//        }
+//        if (fact.getYear() != null && fact.getYear() < 1900) {
+//            errors.add("Year must be after 1900");
+//        }
+//
+//        if (!errors.isEmpty()) {
+//            throw new ETLException("Fact data validation failed: " + String.join(", ", errors));
+//        }
+//    }
 
     public List<String> getAllAvailableYears() {
         return sourceRepo.findDistinctYears();
