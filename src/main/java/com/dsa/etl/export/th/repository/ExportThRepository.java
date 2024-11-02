@@ -19,16 +19,6 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 
 @Repository
 public interface ExportThRepository extends JpaRepository<ExportThEntity, ExportThId> {
-    @QueryHints(value = {
-            @QueryHint(name = HINT_FETCH_SIZE, value = "1000"),
-            @QueryHint(name = HINT_CACHEABLE, value = "false")
-    })
-    @Query("SELECT e FROM ExportThEntity e")
-    Stream<ExportThEntity> streamAll();
-
-    List<ExportThEntity> findByCountry(String country);
-    List<ExportThEntity> findByHs2dg(Integer hs2dg);
-    List<ExportThEntity> findByCountryAndHs2dg(String country, Integer hs2dg);
 
     @Query("SELECT e FROM ExportThEntity e WHERE e.year = :year")
     Stream<ExportThEntity> streamAllByYear(String year);
