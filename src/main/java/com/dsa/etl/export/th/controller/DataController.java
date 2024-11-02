@@ -69,29 +69,29 @@ public class DataController {
 //    }
 
     // Fact table APIs
-    @GetMapping("/facts")
-    public ResponseEntity<Page<FactExportThEntity>> getFacts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) Integer month,
-            @RequestParam(required = false) String country) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<FactExportThEntity> facts;
-
-        if (year != null && month != null && country != null) {
-            facts = factRepo.findByYearAndMonthAndCountry_Country(year, month, country, pageable);
-        } else if (year != null && month != null) {
-            facts = factRepo.findByYearAndMonth(year, month, pageable);
-        } else if (year != null) {
-            facts = factRepo.findByYear(year, pageable);
-        } else {
-            facts = factRepo.findAll(pageable);
-        }
-
-        return ResponseEntity.ok(facts);
-    }
+//    @GetMapping("/facts")
+//    public ResponseEntity<Page<FactExportThEntity>> getFacts(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(required = false) Integer year,
+//            @RequestParam(required = false) Integer month,
+//            @RequestParam(required = false) String country) {
+//
+//        Pageable pageable = PageRequest.of(page, size);
+//        Page<FactExportThEntity> facts;
+//
+//        if (year != null && month != null && country != null) {
+//            facts = factRepo.findByYearAndMonthAndCountry_Country(year, month, country, pageable);
+//        } else if (year != null && month != null) {
+//            facts = factRepo.findByYearAndMonth(year, month, pageable);
+//        } else if (year != null) {
+//            facts = factRepo.findByYear(year, pageable);
+//        } else {
+//            facts = factRepo.findAll(pageable);
+//        }
+//
+//        return ResponseEntity.ok(facts);
+//    }
 
     @GetMapping("/facts/summary")
     public ResponseEntity<Map<String, Object>> getFactsSummary(
@@ -112,15 +112,15 @@ public class DataController {
         return ResponseEntity.ok(summary);
     }
 
-    @GetMapping("/facts/by-country")
-    public ResponseEntity<List<Map<String, Object>>> getFactsByCountry(
-            @RequestParam Integer year) {
-        return ResponseEntity.ok(factRepo.findSummaryByCountry(year));
-    }
-
-    @GetMapping("/facts/by-hs2")
-    public ResponseEntity<List<Map<String, Object>>> getFactsByHs2(
-            @RequestParam Integer year) {
-        return ResponseEntity.ok(factRepo.findSummaryByHs2(year));
-    }
+//    @GetMapping("/facts/by-country")
+//    public ResponseEntity<List<Map<String, Object>>> getFactsByCountry(
+//            @RequestParam Integer year) {
+//        return ResponseEntity.ok(factRepo.findSummaryByCountry(year));
+//    }
+//
+//    @GetMapping("/facts/by-hs2")
+//    public ResponseEntity<List<Map<String, Object>>> getFactsByHs2(
+//            @RequestParam Integer year) {
+//        return ResponseEntity.ok(factRepo.findSummaryByHs2(year));
+//    }
 }
