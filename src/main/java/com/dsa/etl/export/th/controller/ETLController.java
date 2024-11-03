@@ -2,6 +2,7 @@ package com.dsa.etl.export.th.controller;
 
 import com.dsa.etl.export.th.model.dto.ETLResponse;
 import com.dsa.etl.export.th.service.ETLService;
+import com.dsa.etl.export.th.service.ETLServiceAll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ETLController {
     private final ETLService etlService;
+    private final ETLServiceAll etlServiceAll;
+
+    @PostMapping("/process/all")
+    public ResponseEntity<String> startETLForAll() {
+        try {
+            etlServiceAll.performETL();
+            return ResponseEntity.ok("ETL process completed successfully");
+        } catch (Exception e) {
+            log.error("ETL process failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("ETL process failed: " + e.getMessage());
+        }
+    }
 
     @GetMapping("/process/{year}")
     public ResponseEntity<ETLResponse> startETLForYear(@PathVariable String year) {

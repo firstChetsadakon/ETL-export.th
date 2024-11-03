@@ -15,6 +15,7 @@ import java.util.Map;
 @Repository
 public interface FactExportThRepository extends JpaRepository<FactExportThEntity, Long> {
     void deleteByYear(Integer year);
+
     long countByYear(Integer year);
 
     Page<FactExportThEntity> findByYear(Integer year, Pageable pageable);
