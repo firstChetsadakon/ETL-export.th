@@ -35,6 +35,7 @@ public interface FactExportThRepository extends JpaRepository<FactExportThEntity
     @Query("SELECT SUM(f.dollarValue) FROM FactExportThEntity f WHERE f.year = :year AND f.month = :month")
     BigDecimal sumDollarValueByYearAndMonth(@Param("year") Integer year, @Param("month") Integer month);
 
+
 //    @Query("SELECT new map(" +
 //            "f.country.country as country, " +
 //            "SUM(f.thaipValue) as totalThaipValue, " +

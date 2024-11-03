@@ -46,6 +46,8 @@ public interface ExportThRepository extends JpaRepository<ExportThEntity, Export
             nativeQuery = true)
     List<ExportThEntity> findAllWithPagination(@Param("offset") int offset,
                                                @Param("limit") int limit);
+
+
 }
 
 

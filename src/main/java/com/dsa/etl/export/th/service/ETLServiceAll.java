@@ -17,9 +17,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -38,7 +36,7 @@ public class ETLServiceAll {
     private final DataSource dataSource;
     private static final int MAX_CONCURRENT_CHUNKS = 4;  // Reduce from default
     private final ClearTableService clearTableService;
-    private static final int BATCH_SIZE = 5000; // Increased batch size
+    private static final int BATCH_SIZE = 50000; // Increased batch size
     private final Executor executorService;
     private final EntityManager entityManager;
 
@@ -50,6 +48,10 @@ public class ETLServiceAll {
         try {
             // Clear tables
             clearTables();
+
+            // First extract and save dimensions
+            log.info("Extracting dimensions...");
+            extractAndSaveDimensions();
 
             // Extract dimensions and load maps
             Map<Integer, DimHs2Entity> hs2Map = loadHs2Map();
@@ -78,6 +80,96 @@ public class ETLServiceAll {
             watch.stop();
             log.info("ETL process completed in {} seconds", watch.getTotalTimeSeconds());
         }
+    }
+
+    private void extractAndSaveDimensions() {
+        log.info("Starting dimension extraction");
+
+        List<DimHs2Entity> hs2Batch = new ArrayList<>();
+        List<DimHs4Entity> hs4Batch = new ArrayList<>();
+        List<DimCountryEntity> countryBatch = new ArrayList<>();
+
+        Set<Integer> processedHs2 = new HashSet<>();
+        Set<Integer> processedHs4 = new HashSet<>();
+        Set<String> processedCountries = new HashSet<>();
+
+        int offset = 0;
+        int limit = 500000;
+        int batchSize = 500000;
+        List<ExportThEntity> chunk;
+
+        do {
+            chunk = sourceRepo.findAllWithPagination(offset, limit);
+
+            for (ExportThEntity source : chunk) {
+                // HS2 Dimensions
+                if (!processedHs2.contains(source.getHs2dg())) {
+                    DimHs2Entity hs2 = new DimHs2Entity();
+                    hs2.setHs2dg(source.getHs2dg());
+                    hs2.setDescription(source.getDescriptionHs2dg());
+                    hs2Batch.add(hs2);
+                    processedHs2.add(source.getHs2dg());
+
+                    if (hs2Batch.size() >= batchSize) {
+                        hs2Repo.saveAll(hs2Batch);
+                        log.info("Saved batch of {} HS2 dimensions", hs2Batch.size());
+                        hs2Batch.clear();
+                    }
+                }
+
+                // HS4 Dimensions
+                if (!processedHs4.contains(source.getHs4dg())) {
+                    DimHs4Entity hs4 = new DimHs4Entity();
+                    hs4.setHs4dg(source.getHs4dg());
+                    hs4.setDescription(source.getDescriptionHs4dg());
+                    hs4Batch.add(hs4);
+                    processedHs4.add(source.getHs4dg());
+
+                    if (hs4Batch.size() >= batchSize) {
+                        hs4Repo.saveAll(hs4Batch);
+                        log.info("Saved batch of {} HS4 dimensions", hs4Batch.size());
+                        hs4Batch.clear();
+                    }
+                }
+
+                // Country Dimensions
+                if (!processedCountries.contains(source.getCountry())) {
+                    DimCountryEntity country = new DimCountryEntity();
+                    country.setCountry(source.getCountry());
+                    countryBatch.add(country);
+                    processedCountries.add(source.getCountry());
+
+                    if (countryBatch.size() >= batchSize) {
+                        countryRepo.saveAll(countryBatch);
+                        log.info("Saved batch of {} country dimensions", countryBatch.size());
+                        countryBatch.clear();
+                    }
+                }
+            }
+
+            offset += limit;
+            log.info("Processed {} records for dimension extraction", offset);
+
+        } while (!chunk.isEmpty());
+
+        // Save remaining batches
+        if (!hs2Batch.isEmpty()) {
+            hs2Repo.saveAll(hs2Batch);
+            log.info("Saved final batch of {} HS2 dimensions", hs2Batch.size());
+        }
+
+        if (!hs4Batch.isEmpty()) {
+            hs4Repo.saveAll(hs4Batch);
+            log.info("Saved final batch of {} HS4 dimensions", hs4Batch.size());
+        }
+
+        if (!countryBatch.isEmpty()) {
+            countryRepo.saveAll(countryBatch);
+            log.info("Saved final batch of {} country dimensions", countryBatch.size());
+        }
+
+        log.info("Completed dimension extraction and save. Total dimensions: HS2={}, HS4={}, Countries={}",
+                processedHs2.size(), processedHs4.size(), processedCountries.size());
     }
 
     private CompletableFuture<Void> processChunk(int offset, int limit,
