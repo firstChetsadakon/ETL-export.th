@@ -108,14 +108,44 @@ public class ETLService {
         }
     }
 
+    // MySql version
+//    private void clearTables() {
+//        log.info("Starting to clear tables...");
+//
+//        // Disable foreign key checks mysql
+//        entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+//
+//        // Disable foreign key checks mysql
+//        entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+//
+//        try {
+//            // Truncate tables for faster deletion
+//            entityManager.createNativeQuery("TRUNCATE TABLE fact_export_th").executeUpdate();
+//            entityManager.createNativeQuery("TRUNCATE TABLE dim_hs2").executeUpdate();
+//            entityManager.createNativeQuery("TRUNCATE TABLE dim_hs4").executeUpdate();
+//            entityManager.createNativeQuery("TRUNCATE TABLE dim_country").executeUpdate();
+//
+//            // Force commit
+//            entityManager.flush();
+//
+//        } finally {
+//            // Re-enable foreign key checks
+//            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+//        }
+//
+//        log.info("Tables cleared successfully");
+//    }
+
+    // MSSQL version
     private void clearTables() {
         log.info("Starting to clear tables...");
 
-        // Disable foreign key checks
-        entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
-
         try {
+            // Disable constraints for all tables
+            entityManager.createNativeQuery("EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'").executeUpdate();
+
             // Truncate tables for faster deletion
+            // Note: In MSSQL, if tables have foreign key relationships, you need to truncate them in the correct order
             entityManager.createNativeQuery("TRUNCATE TABLE fact_export_th").executeUpdate();
             entityManager.createNativeQuery("TRUNCATE TABLE dim_hs2").executeUpdate();
             entityManager.createNativeQuery("TRUNCATE TABLE dim_hs4").executeUpdate();
@@ -125,8 +155,8 @@ public class ETLService {
             entityManager.flush();
 
         } finally {
-            // Re-enable foreign key checks
-            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+            // Re-enable and check constraints
+            entityManager.createNativeQuery("EXEC sp_MSforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'").executeUpdate();
         }
 
         log.info("Tables cleared successfully");
@@ -278,12 +308,22 @@ public class ETLService {
     private void initializeDatabase() {
         try (Connection conn = dataSource.getConnection()) {
             try (Statement stmt = conn.createStatement()) {
-                // Basic settings
-                stmt.execute("SET SESSION sql_mode = ''");
-                // Performance settings
-                stmt.execute("SET SESSION unique_checks = 0");
-                stmt.execute("SET SESSION foreign_key_checks = 0");
-                stmt.execute("SET SESSION autocommit = 0");
+//                // Basic settings
+//                stmt.execute("SET SESSION sql_mode = ''");
+//                // Performance settings
+//                stmt.execute("SET SESSION unique_checks = 0");
+//                stmt.execute("SET SESSION foreign_key_checks = 0");
+//                stmt.execute("SET SESSION autocommit = 0");
+
+
+
+                stmt.execute("SET ANSI_NULLS ON");
+                stmt.execute("SET QUOTED_IDENTIFIER ON");
+
+                // Performance settings for MSSQL
+                stmt.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");  // Similar to disabling unique checks
+                stmt.execute("SET ARITHABORT ON");  // Improves performance
+                stmt.execute("SET NOCOUNT ON");
             }
         } catch (SQLException e) {
             log.error("Error configuring database: {}", e.getMessage(), e);

@@ -18,7 +18,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 
 @Repository
-public interface ExportThRepository extends JpaRepository<ExportThEntity, ExportThId> {
+public interface ExportThRepository extends JpaRepository<ExportThEntity, Long> {
 
     @Query("SELECT e FROM ExportThEntity e WHERE e.year = :year")
     Stream<ExportThEntity> streamAllByYear(String year);
@@ -38,7 +38,7 @@ public interface ExportThRepository extends JpaRepository<ExportThEntity, Export
                                                   @Param("offset") int offset,
                                                   @Param("limit") int limit);
 
-    @Query(value = "SELECT COUNT(*) FROM export_th WHERE year = :year",
+    @Query(value = "SELECT COUNT(*) FROM export_th.export_th WHERE year = :year",
             nativeQuery = true)
     long countByYear(@Param("year") String year);
 

@@ -229,12 +229,21 @@ public class ETLServiceAll {
     private void initializeDatabase() {
         try (Connection conn = dataSource.getConnection()) {
             try (Statement stmt = conn.createStatement()) {
-                // Basic settings
-                stmt.execute("SET SESSION sql_mode = ''");
-                // Performance settings
-                stmt.execute("SET SESSION unique_checks = 0");
-                stmt.execute("SET SESSION foreign_key_checks = 0");
-                stmt.execute("SET SESSION autocommit = 0");
+//                // Basic settings mssql
+//                stmt.execute("SET SESSION sql_mode = ''");
+//                // Performance settings
+//                stmt.execute("SET SESSION unique_checks = 0");
+//                stmt.execute("SET SESSION foreign_key_checks = 0");
+//                stmt.execute("SET SESSION autocommit = 0");
+
+
+                stmt.execute("SET ANSI_NULLS ON");
+                stmt.execute("SET QUOTED_IDENTIFIER ON");
+
+                // Performance settings for MSSQL
+                stmt.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");  // Similar to disabling unique checks
+                stmt.execute("SET ARITHABORT ON");  // Improves performance
+                stmt.execute("SET NOCOUNT ON");     // Reduces network traffic
             }
         } catch (SQLException e) {
             log.error("Error configuring database: {}", e.getMessage(), e);
