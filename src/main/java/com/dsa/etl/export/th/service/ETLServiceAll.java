@@ -36,7 +36,7 @@ public class ETLServiceAll {
     private final DataSource dataSource;
     private static final int MAX_CONCURRENT_CHUNKS = 4;  // Reduce from default
     private final ClearTableService clearTableService;
-    private static final int BATCH_SIZE = 50000; // Increased batch size
+    private static final int BATCH_SIZE = 5000; // Increased batch size
     private final Executor executorService;
     private final EntityManager entityManager;
 
@@ -60,7 +60,7 @@ public class ETLServiceAll {
 
             // Get total count for all records
             long totalRecords = sourceRepo.count();  // count all records
-            int chunkSize = 50000;
+            int chunkSize = 5000;
             int totalChunks = (int) Math.ceil((double) totalRecords / chunkSize);
 
             log.info("Processing {} total records in {} chunks", totalRecords, totalChunks);
