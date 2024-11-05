@@ -46,8 +46,8 @@ public class ETLServiceAll {
         watch.start();
 
         try {
-            // Clear tables
-            clearTables();
+//            // Clear tables
+//            clearTables();
 
             // First extract and save dimensions
             log.info("Extracting dimensions...");
@@ -82,94 +82,230 @@ public class ETLServiceAll {
         }
     }
 
+//    private void extractAndSaveDimensions() {
+//        log.info("Starting dimension extraction");
+//
+//        List<DimHs2Entity> hs2Batch = new ArrayList<>();
+//        List<DimHs4Entity> hs4Batch = new ArrayList<>();
+//        List<DimCountryEntity> countryBatch = new ArrayList<>();
+//
+//        Set<Integer> processedHs2 = new HashSet<>();
+//        Set<Integer> processedHs4 = new HashSet<>();
+//        Set<String> processedCountries = new HashSet<>();
+//
+//        int offset = 0;
+//        int limit = 500000;
+//        int batchSize = 500000;
+//        List<ExportThEntity> chunk;
+//
+//        do {
+//            chunk = sourceRepo.findAllWithPagination(offset, limit);
+//
+//            for (ExportThEntity source : chunk) {
+//                // HS2 Dimensions
+//                if (!processedHs2.contains(source.getHs2dg())) {
+//                    DimHs2Entity hs2 = new DimHs2Entity();
+//                    hs2.setHs2dg(source.getHs2dg());
+//                    hs2.setDescription(source.getDescriptionHs2dg());
+//                    hs2Batch.add(hs2);
+//                    processedHs2.add(source.getHs2dg());
+//
+//                    if (hs2Batch.size() >= batchSize) {
+//                        hs2Repo.saveAll(hs2Batch);
+//                        log.info("Saved batch of {} HS2 dimensions", hs2Batch.size());
+//                        hs2Batch.clear();
+//                    }
+//                }
+//
+//                // HS4 Dimensions
+//                if (!processedHs4.contains(source.getHs4dg())) {
+//                    DimHs4Entity hs4 = new DimHs4Entity();
+//                    hs4.setHs4dg(source.getHs4dg());
+//                    hs4.setDescription(source.getDescriptionHs4dg());
+//                    hs4Batch.add(hs4);
+//                    processedHs4.add(source.getHs4dg());
+//
+//                    if (hs4Batch.size() >= batchSize) {
+//                        hs4Repo.saveAll(hs4Batch);
+//                        log.info("Saved batch of {} HS4 dimensions", hs4Batch.size());
+//                        hs4Batch.clear();
+//                    }
+//                }
+//
+//                // Country Dimensions
+//                if (!processedCountries.contains(source.getCountry())) {
+//                    DimCountryEntity country = new DimCountryEntity();
+//                    country.setCountry(source.getCountry());
+//                    countryBatch.add(country);
+//                    processedCountries.add(source.getCountry());
+//
+//                    if (countryBatch.size() >= batchSize) {
+//                        countryRepo.saveAll(countryBatch);
+//                        log.info("Saved batch of {} country dimensions", countryBatch.size());
+//                        countryBatch.clear();
+//                    }
+//                }
+//            }
+//
+//            offset += limit;
+//            log.info("Processed {} records for dimension extraction", offset);
+//
+//        } while (!chunk.isEmpty());
+//
+//        // Save remaining batches
+//        if (!hs2Batch.isEmpty()) {
+//            hs2Repo.saveAll(hs2Batch);
+//            log.info("Saved final batch of {} HS2 dimensions", hs2Batch.size());
+//        }
+//
+//        if (!hs4Batch.isEmpty()) {
+//            hs4Repo.saveAll(hs4Batch);
+//            log.info("Saved final batch of {} HS4 dimensions", hs4Batch.size());
+//        }
+//
+//        if (!countryBatch.isEmpty()) {
+//            countryRepo.saveAll(countryBatch);
+//            log.info("Saved final batch of {} country dimensions", countryBatch.size());
+//        }
+//
+//        log.info("Completed dimension extraction and save. Total dimensions: HS2={}, HS4={}, Countries={}",
+//                processedHs2.size(), processedHs4.size(), processedCountries.size());
+//    }
+
     private void extractAndSaveDimensions() {
         log.info("Starting dimension extraction");
+
+        // Get existing dimensions first
+        Set<Integer> existingHs2 = new HashSet<>(hs2Repo.findAllHs2Codes());
+        Set<Integer> existingHs4 = new HashSet<>(hs4Repo.findAllHs4Codes());
+        Set<String> existingCountries = new HashSet<>(countryRepo.findAllCountries());
 
         List<DimHs2Entity> hs2Batch = new ArrayList<>();
         List<DimHs4Entity> hs4Batch = new ArrayList<>();
         List<DimCountryEntity> countryBatch = new ArrayList<>();
 
-        Set<Integer> processedHs2 = new HashSet<>();
-        Set<Integer> processedHs4 = new HashSet<>();
-        Set<String> processedCountries = new HashSet<>();
+        Set<Integer> processedHs2 = new HashSet<>(existingHs2);  // Initialize with existing
+        Set<Integer> processedHs4 = new HashSet<>(existingHs4);  // Initialize with existing
+        Set<String> processedCountries = new HashSet<>(existingCountries);  // Initialize with existing
 
         int offset = 0;
         int limit = 500000;
         int batchSize = 500000;
         List<ExportThEntity> chunk;
 
-        do {
-            chunk = sourceRepo.findAllWithPagination(offset, limit);
+        try {
+            do {
+                chunk = sourceRepo.findAllWithPagination(offset, limit);
+                int chunkSize = chunk.size();
+                if (chunkSize > 0) {
+                    log.info("Processing chunk of {} records starting from offset {}", chunkSize, offset);
+                }
 
-            for (ExportThEntity source : chunk) {
-                // HS2 Dimensions
-                if (!processedHs2.contains(source.getHs2dg())) {
-                    DimHs2Entity hs2 = new DimHs2Entity();
-                    hs2.setHs2dg(source.getHs2dg());
-                    hs2.setDescription(source.getDescriptionHs2dg());
-                    hs2Batch.add(hs2);
-                    processedHs2.add(source.getHs2dg());
+                for (ExportThEntity source : chunk) {
+                    try {
+                        // HS2 Dimensions
+                        if (source.getHs2dg() != null && !processedHs2.contains(source.getHs2dg())) {
+                            DimHs2Entity hs2 = new DimHs2Entity();
+                            hs2.setHs2dg(source.getHs2dg());
+                            hs2.setDescription(source.getDescriptionHs2dg());
+                            hs2Batch.add(hs2);
+                            processedHs2.add(source.getHs2dg());
 
-                    if (hs2Batch.size() >= batchSize) {
-                        hs2Repo.saveAll(hs2Batch);
-                        log.info("Saved batch of {} HS2 dimensions", hs2Batch.size());
-                        hs2Batch.clear();
+                            if (hs2Batch.size() >= batchSize) {
+                                saveHs2Batch(hs2Batch);
+                            }
+                        }
+
+                        // HS4 Dimensions
+                        if (source.getHs4dg() != null && !processedHs4.contains(source.getHs4dg())) {
+                            DimHs4Entity hs4 = new DimHs4Entity();
+                            hs4.setHs4dg(source.getHs4dg());
+                            hs4.setDescription(source.getDescriptionHs4dg());
+                            hs4Batch.add(hs4);
+                            processedHs4.add(source.getHs4dg());
+
+                            if (hs4Batch.size() >= batchSize) {
+                                saveHs4Batch(hs4Batch);
+                            }
+                        }
+
+                        // Country Dimensions
+                        if (source.getCountry() != null && !processedCountries.contains(source.getCountry())) {
+                            DimCountryEntity country = new DimCountryEntity();
+                            country.setCountry(source.getCountry());
+                            countryBatch.add(country);
+                            processedCountries.add(source.getCountry());
+
+                            if (countryBatch.size() >= batchSize) {
+                                saveCountryBatch(countryBatch);
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("Error processing record: {}", source, e);
                     }
                 }
 
-                // HS4 Dimensions
-                if (!processedHs4.contains(source.getHs4dg())) {
-                    DimHs4Entity hs4 = new DimHs4Entity();
-                    hs4.setHs4dg(source.getHs4dg());
-                    hs4.setDescription(source.getDescriptionHs4dg());
-                    hs4Batch.add(hs4);
-                    processedHs4.add(source.getHs4dg());
+                offset += limit;
+                log.info("Processed {} records for dimension extraction", offset);
 
-                    if (hs4Batch.size() >= batchSize) {
-                        hs4Repo.saveAll(hs4Batch);
-                        log.info("Saved batch of {} HS4 dimensions", hs4Batch.size());
-                        hs4Batch.clear();
-                    }
-                }
+            } while (!chunk.isEmpty());
 
-                // Country Dimensions
-                if (!processedCountries.contains(source.getCountry())) {
-                    DimCountryEntity country = new DimCountryEntity();
-                    country.setCountry(source.getCountry());
-                    countryBatch.add(country);
-                    processedCountries.add(source.getCountry());
+            // Save remaining batches
+            saveHs2Batch(hs2Batch);
+            saveHs4Batch(hs4Batch);
+            saveCountryBatch(countryBatch);
 
-                    if (countryBatch.size() >= batchSize) {
-                        countryRepo.saveAll(countryBatch);
-                        log.info("Saved batch of {} country dimensions", countryBatch.size());
-                        countryBatch.clear();
-                    }
-                }
+            log.info("Completed dimension extraction and save. New dimensions added: HS2={}, HS4={}, Countries={}",
+                    processedHs2.size() - existingHs2.size(),
+                    processedHs4.size() - existingHs4.size(),
+                    processedCountries.size() - existingCountries.size());
+
+        } catch (Exception e) {
+            log.error("Error during dimension extraction", e);
+            throw new RuntimeException("Failed to extract dimensions", e);
+        }
+    }
+
+    @Transactional
+    protected void saveHs2Batch(List<DimHs2Entity> batch) {
+        if (!batch.isEmpty()) {
+            try {
+                hs2Repo.saveAll(batch);
+                log.info("Saved batch of {} HS2 dimensions", batch.size());
+                batch.clear();
+            } catch (Exception e) {
+                log.error("Error saving HS2 batch", e);
+                throw e;
             }
-
-            offset += limit;
-            log.info("Processed {} records for dimension extraction", offset);
-
-        } while (!chunk.isEmpty());
-
-        // Save remaining batches
-        if (!hs2Batch.isEmpty()) {
-            hs2Repo.saveAll(hs2Batch);
-            log.info("Saved final batch of {} HS2 dimensions", hs2Batch.size());
         }
+    }
 
-        if (!hs4Batch.isEmpty()) {
-            hs4Repo.saveAll(hs4Batch);
-            log.info("Saved final batch of {} HS4 dimensions", hs4Batch.size());
+    @Transactional
+    protected void saveHs4Batch(List<DimHs4Entity> batch) {
+        if (!batch.isEmpty()) {
+            try {
+                hs4Repo.saveAll(batch);
+                log.info("Saved batch of {} HS4 dimensions", batch.size());
+                batch.clear();
+            } catch (Exception e) {
+                log.error("Error saving HS4 batch", e);
+                throw e;
+            }
         }
+    }
 
-        if (!countryBatch.isEmpty()) {
-            countryRepo.saveAll(countryBatch);
-            log.info("Saved final batch of {} country dimensions", countryBatch.size());
+    @Transactional
+    protected void saveCountryBatch(List<DimCountryEntity> batch) {
+        if (!batch.isEmpty()) {
+            try {
+                countryRepo.saveAll(batch);
+                log.info("Saved batch of {} country dimensions", batch.size());
+                batch.clear();
+            } catch (Exception e) {
+                log.error("Error saving country batch", e);
+                throw e;
+            }
         }
-
-        log.info("Completed dimension extraction and save. Total dimensions: HS2={}, HS4={}, Countries={}",
-                processedHs2.size(), processedHs4.size(), processedCountries.size());
     }
 
     private CompletableFuture<Void> processChunk(int offset, int limit,

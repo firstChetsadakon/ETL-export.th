@@ -16,4 +16,7 @@ public interface DimHs2Repository extends JpaRepository<DimHs2Entity, Long> {
 
     @Query("SELECT h FROM DimHs2Entity h WHERE h.hs2Id NOT IN (SELECT DISTINCT f.hs2Id FROM FactExportThEntity f)")
     List<DimHs2Entity> findUnusedHs2Dimensions();
+
+    @Query("SELECT d.hs2dg FROM DimHs2Entity d")
+    List<Integer> findAllHs2Codes();
 }

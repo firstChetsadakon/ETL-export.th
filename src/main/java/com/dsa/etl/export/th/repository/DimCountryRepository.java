@@ -16,4 +16,7 @@ public interface DimCountryRepository extends JpaRepository<DimCountryEntity, Lo
 
     @Query("SELECT c FROM DimCountryEntity c WHERE c.countryId NOT IN (SELECT DISTINCT f.countryId FROM FactExportThEntity f)")
     List<DimCountryEntity> findUnusedCountryDimensions();
+
+    @Query("SELECT d.country FROM DimCountryEntity d")
+    List<String> findAllCountries();
 }
