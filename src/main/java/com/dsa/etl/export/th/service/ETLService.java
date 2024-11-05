@@ -54,7 +54,7 @@ public class ETLService {
         watch.start();
 
         try {
-            clearTables();
+//            clearTables();
             // First extract and save dimensions from source data
             extractAndSaveDimensions(year);
 
@@ -132,43 +132,119 @@ public class ETLService {
         log.info("Tables cleared successfully");
     }
 
+//    private void extractAndSaveDimensions(String year) {
+//        log.info("Starting dimension extraction for year: {}", year);
+//
+//        Set<DimHs2Entity> hs2Dimensions = new HashSet<>();
+//        Set<DimHs4Entity> hs4Dimensions = new HashSet<>();
+//        Set<DimCountryEntity> countryDimensions = new HashSet<>();
+//
+//        try (Stream<ExportThEntity> stream = sourceRepo.streamAllByYear(year)) {
+//            stream.forEach(source -> {
+//                // Extract HS2 Dimensions
+//                DimHs2Entity hs2 = new DimHs2Entity();
+//                hs2.setHs2dg(source.getHs2dg());
+//                hs2.setDescription(source.getDescriptionHs2dg());
+//                hs2Dimensions.add(hs2);
+//
+//                // Extract HS4 Dimensions
+//                DimHs4Entity hs4 = new DimHs4Entity();
+//                hs4.setHs4dg(source.getHs4dg());
+//                hs4.setDescription(source.getDescriptionHs4dg());
+//                hs4Dimensions.add(hs4);
+//
+//                // Extract Country Dimensions
+//                DimCountryEntity country = new DimCountryEntity();
+//                country.setCountry(source.getCountry());
+//                countryDimensions.add(country);
+//            });
+//        }
+//
+//        // Save dimensions to tables
+//        log.info("Saving {} unique HS2 dimensions", hs2Dimensions.size());
+//        hs2Repo.saveAll(hs2Dimensions);
+//
+//        log.info("Saving {} unique HS4 dimensions", hs4Dimensions.size());
+//        hs4Repo.saveAll(hs4Dimensions);
+//
+//        log.info("Saving {} unique country dimensions", countryDimensions.size());
+//        countryRepo.saveAll(countryDimensions);
+//
+//        log.info("Completed dimension extraction and save");
+//    }
+
     private void extractAndSaveDimensions(String year) {
         log.info("Starting dimension extraction for year: {}", year);
 
-        Set<DimHs2Entity> hs2Dimensions = new HashSet<>();
-        Set<DimHs4Entity> hs4Dimensions = new HashSet<>();
-        Set<DimCountryEntity> countryDimensions = new HashSet<>();
+        // Get existing dimensions to check for duplicates
+        Set<Integer> existingHs2Codes = hs2Repo.findAll().stream()
+                .map(DimHs2Entity::getHs2dg)
+                .collect(Collectors.toSet());
+
+        Set<Integer> existingHs4Codes = hs4Repo.findAll().stream()
+                .map(DimHs4Entity::getHs4dg)
+                .collect(Collectors.toSet());
+
+        Set<String> existingCountries = countryRepo.findAll().stream()
+                .map(DimCountryEntity::getCountry)
+                .collect(Collectors.toSet());
+
+        // Sets for new dimensions
+        Set<DimHs2Entity> newHs2Dimensions = new HashSet<>();
+        Set<DimHs4Entity> newHs4Dimensions = new HashSet<>();
+        Set<DimCountryEntity> newCountryDimensions = new HashSet<>();
 
         try (Stream<ExportThEntity> stream = sourceRepo.streamAllByYear(year)) {
             stream.forEach(source -> {
-                // Extract HS2 Dimensions
-                DimHs2Entity hs2 = new DimHs2Entity();
-                hs2.setHs2dg(source.getHs2dg());
-                hs2.setDescription(source.getDescriptionHs2dg());
-                hs2Dimensions.add(hs2);
+                // Extract HS2 Dimensions if not exists
+                if (!existingHs2Codes.contains(source.getHs2dg())) {
+                    DimHs2Entity hs2 = new DimHs2Entity();
+                    hs2.setHs2dg(source.getHs2dg());
+                    hs2.setDescription(source.getDescriptionHs2dg());
+                    newHs2Dimensions.add(hs2);
+                    existingHs2Codes.add(source.getHs2dg()); // Add to existing set to prevent duplicates within the same batch
+                }
 
-                // Extract HS4 Dimensions
-                DimHs4Entity hs4 = new DimHs4Entity();
-                hs4.setHs4dg(source.getHs4dg());
-                hs4.setDescription(source.getDescriptionHs4dg());
-                hs4Dimensions.add(hs4);
+                // Extract HS4 Dimensions if not exists
+                if (!existingHs4Codes.contains(source.getHs4dg())) {
+                    DimHs4Entity hs4 = new DimHs4Entity();
+                    hs4.setHs4dg(source.getHs4dg());
+                    hs4.setDescription(source.getDescriptionHs4dg());
+                    newHs4Dimensions.add(hs4);
+                    existingHs4Codes.add(source.getHs4dg());
+                }
 
-                // Extract Country Dimensions
-                DimCountryEntity country = new DimCountryEntity();
-                country.setCountry(source.getCountry());
-                countryDimensions.add(country);
+                // Extract Country Dimensions if not exists
+                if (!existingCountries.contains(source.getCountry())) {
+                    DimCountryEntity country = new DimCountryEntity();
+                    country.setCountry(source.getCountry());
+                    newCountryDimensions.add(country);
+                    existingCountries.add(source.getCountry());
+                }
             });
         }
 
-        // Save dimensions to tables
-        log.info("Saving {} unique HS2 dimensions", hs2Dimensions.size());
-        hs2Repo.saveAll(hs2Dimensions);
+        // Save only new dimensions to tables
+        if (!newHs2Dimensions.isEmpty()) {
+            log.info("Saving {} new HS2 dimensions", newHs2Dimensions.size());
+            hs2Repo.saveAll(newHs2Dimensions);
+        } else {
+            log.info("No new HS2 dimensions to save");
+        }
 
-        log.info("Saving {} unique HS4 dimensions", hs4Dimensions.size());
-        hs4Repo.saveAll(hs4Dimensions);
+        if (!newHs4Dimensions.isEmpty()) {
+            log.info("Saving {} new HS4 dimensions", newHs4Dimensions.size());
+            hs4Repo.saveAll(newHs4Dimensions);
+        } else {
+            log.info("No new HS4 dimensions to save");
+        }
 
-        log.info("Saving {} unique country dimensions", countryDimensions.size());
-        countryRepo.saveAll(countryDimensions);
+        if (!newCountryDimensions.isEmpty()) {
+            log.info("Saving {} new country dimensions", newCountryDimensions.size());
+            countryRepo.saveAll(newCountryDimensions);
+        } else {
+            log.info("No new country dimensions to save");
+        }
 
         log.info("Completed dimension extraction and save");
     }
