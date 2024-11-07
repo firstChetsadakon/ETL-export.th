@@ -10,15 +10,9 @@ import com.dsa.etl.export.th.repository.DimHs4Repository;
 import com.dsa.etl.export.th.repository.FactExportThRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/data")
@@ -37,36 +31,16 @@ public class DataController {
         return ResponseEntity.ok(hs2Repo.findAll());
     }
 
-//    @GetMapping("/dimensions/hs2/{id}")
-//    public ResponseEntity<DimHs2Entity> getHs2ById(@PathVariable Long id) {
-//        return hs2Repo.findById(id)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
-
     @GetMapping("/dimensions/hs4")
     public ResponseEntity<List<DimHs4Entity>> getAllHs4() {
         return ResponseEntity.ok(hs4Repo.findAll());
     }
-
-//    @GetMapping("/dimensions/hs4/{id}")
-//    public ResponseEntity<DimHs4Entity> getHs4ById(@PathVariable Long id) {
-//        return hs4Repo.findById(id)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
 
     @GetMapping("/dimensions/countries")
     public ResponseEntity<List<DimCountryEntity>> getAllCountries() {
         return ResponseEntity.ok(countryRepo.findAll());
     }
 
-//    @GetMapping("/dimensions/countries/{id}")
-//    public ResponseEntity<DimCountryEntity> getCountryById(@PathVariable Long id) {
-//        return countryRepo.findById(id)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
 
     // Fact table APIs
 //    @GetMapping("/facts")
@@ -93,24 +67,24 @@ public class DataController {
 //        return ResponseEntity.ok(facts);
 //    }
 
-    @GetMapping("/facts/summary")
-    public ResponseEntity<Map<String, Object>> getFactsSummary(
-            @RequestParam Integer year,
-            @RequestParam(required = false) Integer month) {
-        Map<String, Object> summary = new HashMap<>();
-
-        if (month != null) {
-            summary.put("totalThaipValue", factRepo.sumThaipValueByYearAndMonth(year, month));
-            summary.put("totalDollarValue", factRepo.sumDollarValueByYearAndMonth(year, month));
-            summary.put("recordCount", factRepo.countByYearAndMonth(year, month));
-        } else {
-            summary.put("totalThaipValue", factRepo.sumThaipValueByYear(year));
-            summary.put("totalDollarValue", factRepo.sumDollarValueByYear(year));
-            summary.put("recordCount", factRepo.countByYear(year));
-        }
-
-        return ResponseEntity.ok(summary);
-    }
+//    @GetMapping("/facts/summary")
+//    public ResponseEntity<Map<String, Object>> getFactsSummary(
+//            @RequestParam Integer year,
+//            @RequestParam(required = false) Integer month) {
+//        Map<String, Object> summary = new HashMap<>();
+//
+//        if (month != null) {
+//            summary.put("totalThaipValue", factRepo.sumThaipValueByYearAndMonth(year, month));
+//            summary.put("totalDollarValue", factRepo.sumDollarValueByYearAndMonth(year, month));
+//            summary.put("recordCount", factRepo.countByYearAndMonth(year, month));
+//        } else {
+//            summary.put("totalThaipValue", factRepo.sumThaipValueByYear(year));
+//            summary.put("totalDollarValue", factRepo.sumDollarValueByYear(year));
+//            summary.put("recordCount", factRepo.countByYear(year));
+//        }
+//
+//        return ResponseEntity.ok(summary);
+//    }
 
 //    @GetMapping("/facts/by-country")
 //    public ResponseEntity<List<Map<String, Object>>> getFactsByCountry(
