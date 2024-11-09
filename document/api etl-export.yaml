@@ -1,0 +1,298 @@
+openapi: 3.0.0
+info:
+  title: ETL Data Processing API
+  description: |
+    API for managing ETL operations, data retrieval, and system maintenance.
+    All year values are in Buddhist Era (พ.ศ.).
+  version: 1.0.0
+  
+paths:
+  /etl/process/all:
+    post:
+      tags:
+        - ETL Operations
+      summary: Process ETL for all available data
+      responses:
+        '200':
+          description: ETL process completed successfully
+          content:
+            text/plain:
+              example: "ETL process completed successfully"
+        '500':
+          description: Internal server error
+          content:
+            text/plain:
+              example: "ETL process failed: Database connection timeout"
+
+  /etl/process/{year}:
+    get:
+      tags:
+        - ETL Operations
+      summary: Process ETL for specific year
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "2567"
+          description: Year in Buddhist Era (พ.ศ.)
+      responses:
+        '200':
+          description: ETL process completed successfully
+          content:
+            application/json:
+              example:
+                message: "ETL process completed successfully for year: 2567"
+                status: "COMPLETE"
+                timestamp: "2567-11-09T14:30:00+07:00"
+
+  /etl/status/{year}:
+    get:
+      tags:
+        - ETL Operations
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "2567"
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              example:
+                year: "2567"
+                factRecords: 150000
+                dimensions:
+                  countries: 195
+                  hs2: 99
+                  hs4: 1224
+
+  /facts:
+    get:
+      tags:
+        - Data Access
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+          example: 10
+        - name: year
+          in: query
+          schema:
+            type: integer
+          example: 2567
+        - name: month
+          in: query
+          schema:
+            type: integer
+          example: 6
+      responses:
+        '200':
+          description: Successfully retrieved fact records
+          content:
+            application/json:
+              example:
+                content:
+                  - factId: 1
+                    country: "สหรัฐอเมริกา"
+                    hs2Code: "85"
+                    hs2Description: "เครื่องจักรไฟฟ้าและอุปกรณ์"
+                    hs4Code: "8517"
+                    hs4Description: "เครื่องโทรศัพท์ รวมถึงสมาร์ทโฟน"
+                    thaipValue: 1250000.00
+                    dollarValue: 37500.00
+                    size: "LARGE"
+                    month: 6
+                    year: 2567
+                  - factId: 2
+                    country: "จีน"
+                    hs2Code: "84"
+                    hs2Description: "เครื่องจักรกลและส่วนประกอบเชิงกล"
+                    hs4Code: "8471"
+                    hs4Description: "เครื่องประมวลผลข้อมูลอัตโนมัติ"
+                    thaipValue: 980000.00
+                    dollarValue: 29400.00
+                    size: "MEDIUM"
+                    month: 6
+                    year: 2567
+                totalElements: 150000
+                totalPages: 15000
+                size: 10
+                number: 0
+
+  /facts/summary/year/{year}:
+    get:
+      tags:
+        - Data Access
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2567
+      responses:
+        '200':
+          description: Successfully retrieved year summary
+          content:
+            application/json:
+              example:
+                totalThaipValue: 125000000.00
+                totalDollarValue: 3750000.00
+                recordCount: 150000
+                year: 2567
+
+  /facts/summary/{year}/{month}:
+    get:
+      tags:
+        - Data Access
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2567
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 6
+      responses:
+        '200':
+          description: Successfully retrieved month summary
+          content:
+            application/json:
+              example:
+                year: 2567
+                month: 6
+                totalThaipValue: 12500000.00
+                totalDollarValue: 375000.00
+                recordCount: 12500
+
+  /facts/top-countries/{year}:
+    get:
+      tags:
+        - Data Access
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2567
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          example: 5
+      responses:
+        '200':
+          description: Successfully retrieved top countries
+          content:
+            application/json:
+              example:
+                - country: "สหรัฐอเมริกา"
+                  totalValue: 15000000.00
+                  year: 2567
+                - country: "จีน"
+                  totalValue: 12500000.00
+                  year: 2567
+                - country: "ญี่ปุ่น"
+                  totalValue: 8750000.00
+                  year: 2567
+                - country: "เยอรมนี"
+                  totalValue: 7500000.00
+                  year: 2567
+                - country: "เกาหลีใต้"
+                  totalValue: 6250000.00
+                  year: 2567
+
+  /data/dimensions/hs2:
+    get:
+      tags:
+        - Data Access
+      responses:
+        '200':
+          description: Successfully retrieved HS2 codes
+          content:
+            application/json:
+              example:
+                - hs2Id: 1
+                  hs2dg: 85
+                  description: "เครื่องจักรไฟฟ้าและอุปกรณ์"
+                - hs2Id: 2
+                  hs2dg: 84
+                  description: "เครื่องจักรกลและส่วนประกอบเชิงกล"
+                - hs2Id: 3
+                  hs2dg: 87
+                  description: "ยานพาหนะนอกจากรถไฟ"
+
+  /data/dimensions/hs4:
+    get:
+      tags:
+        - Data Access
+      responses:
+        '200':
+          description: Successfully retrieved HS4 codes
+          content:
+            application/json:
+              example:
+                - hs4Id: 1
+                  hs4dg: 8517
+                  description: "เครื่องโทรศัพท์ รวมถึงสมาร์ทโฟน"
+                - hs4Id: 2
+                  hs4dg: 8471
+                  description: "เครื่องประมวลผลข้อมูลอัตโนมัติ"
+                - hs4Id: 3
+                  hs4dg: 8708
+                  description: "ส่วนประกอบและอุปกรณ์ยานยนต์"
+
+  /data/dimensions/countries:
+    get:
+      tags:
+        - Data Access
+      responses:
+        '200':
+          description: Successfully retrieved countries
+          content:
+            application/json:
+              example:
+                - countryId: 1
+                  country: "สหรัฐอเมริกา"
+                - countryId: 2
+                  country: "จีน"
+                - countryId: 3
+                  country: "ญี่ปุ่น"
+                - countryId: 4
+                  country: "เยอรมนี"
+
+components:
+  schemas:
+    ETLResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "ETL process completed successfully for year: 2567"
+        status:
+          type: string
+          example: "COMPLETE"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2567-11-09T14:30:00+07:00"

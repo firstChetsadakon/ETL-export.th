@@ -39,6 +39,8 @@ public class FactController {
         return ResponseEntity.ok(response);
     }
 
+    
+
     // 2. Get summary statistics by year
     @GetMapping("/summary/year/{year}")
     public ResponseEntity<Map<String, Object>> getYearSummary(@PathVariable Integer year) {
